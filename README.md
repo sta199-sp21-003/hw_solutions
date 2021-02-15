@@ -1,7 +1,7 @@
 # STA 199: Homework solutions
 
 
-| Topic       | Exercises and solutions |
+| Topic       | Solutions               |
 |-------------|-------------------------|
 | Homework 01 | :white_check_mark:      |
 | Homework 02 | :white_check_mark:      |
