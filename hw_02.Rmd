@@ -1,0 +1,153 @@
+---
+title: "Homework #02: Data wangling"
+output:
+  pdf_document: default
+  html_document: default
+editor_options: 
+  chunk_output_type: console
+---
+
+# Load Packages and data
+
+```{r load-packages, message = FALSE, warning = FALSE}
+library(tidyverse)
+``` 
+
+```{r read-in-data, message = FALSE, warning = FALSE}
+people <- read_csv("data/people.csv")
+pitching <- read_csv("data/pitching.csv")
+salaries <- read_csv("data/salaries.csv")
+teams <- read_csv("data/teams.csv")
+```
+
+# Exercise 1
+
+```{r ex-1}
+team_stats <- teams %>% 
+  filter(year_id %in% 2011:2016) %>%
+  mutate(win_pct = wins / games ) %>%
+  select(year_id, team_id, win_pct)
+```
+
+# Exercise 2
+
+```{r ex-2}
+team_spending <- pitching %>%
+  inner_join(salaries, by = c("player_id", "year_id", "team_id")) %>%
+  group_by(year_id, team_id) %>%
+  summarize(pitching_salaries = sum(salary, na.rm = TRUE)) %>%
+  ungroup()
+
+team_spending
+```
+
+# Exercise 3
+
+```{r ex-3}
+team_stats %>%
+  left_join(team_spending, by = c("year_id", "team_id")) %>%
+  ggplot(aes(x = pitching_salaries / 1e6, y = win_pct)) + 
+  geom_point() + 
+  geom_smooth(se = FALSE) + 
+  labs(title = "Win percentage versus pitching salaries",
+       x = "Pitching Spending (millions)", y = "Win Percentage") + 
+  facet_wrap(~ year_id) + 
+  theme_bw()
+```
+
+# Exercise 4
+
+```{r ex-4}
+top_so_by_year <- pitching %>% 
+  filter(year_id >= 1901) %>%
+  inner_join(people, by = "player_id") %>%
+  group_by(year_id, league_id) %>%
+  filter(strike_outs == max(strike_outs)) %>%
+  select(year_id, league_id, strike_outs, first_name, last_name)
+
+glimpse(top_so_by_year)
+```
+
+# Exercise 5
+
+```{r ex-5}
+player_era <- pitching %>%
+  group_by(player_id, year_id) %>%
+  summarize(total_earned_runs = sum(earned_runs, na.rm = TRUE),
+            total_strike_outs = sum(strike_outs, na.rm = TRUE),
+            total_innings_pitched = sum(innings_pitched, na.rm = TRUE),
+            era = 9 * (total_earned_runs / total_innings_pitched)) %>%
+  select(player_id, year_id, total_strike_outs, era) %>%
+  ungroup()
+```
+
+# Exercise 6
+
+```{r ex-6}
+player_era_age <- player_era %>%
+  left_join(people, by = "player_id") %>%
+  mutate(age = year_id - birth_year)
+
+pitching_stats_by_age <- player_era_age %>%
+  group_by(age) %>%
+  summarize(median_era = median(era, na.rm = TRUE),
+            median_so = median(total_strike_outs, na.rm = TRUE),
+            count = n())
+```
+
+# Exercise 7
+
+```{r ex-7}
+ggplot(data = pitching_stats_by_age, 
+       mapping = aes(x = age, y = median_so, size = count)) + 
+  geom_point(alpha = 0.50) +
+  labs(title = "Strike out performance as pitchers age",
+       x = "Player age", y = "Median strikeouts", size = "Number of players") +
+  theme_bw()
+```
+
+Higher player ages are associated with a higher median number of strikeouts for
+players between the ages of 16 and 30. Between 30 and 35 or so, the median 
+number of strikeouts is roughly stable. For pitchers older than 35, higher 
+ages are associated with a lower median number of strikeouts, and then the 
+median becomes highly variable, with older pitchers having both an 
+exceptionally high and an exceptionally low number of strikeouts. This 
+variability is a consequence of the small number of older pitchers.
+
+Interestingly, there are four pitchers who are only 16 years old. Two of them,
+Joe Nuxhall and Carl Scheib, pitched in the 20th century.
+
+# Exercise 8
+
+```{r ex-8}
+top_players <- c("koufasa01", "kershcl01", "gibsobo01", "clemero02",
+                 "maddugr01", "youngcy01", "johnswa01", "johnsra05",
+                 "mathech01")
+
+player_era_age %>%
+  filter(player_id %in% top_players) %>%
+  mutate(full_name = paste0(last_name, ", ", first_name)) %>%
+  ggplot(aes(x = age, y = era)) + 
+  geom_point() + 
+  geom_line() + 
+  labs(title = "How do pitchers age?",
+       subtitle = "trends in ERA for careers of top pitchers",
+       x = "Age", y = "Earned Run Average") +
+  facet_wrap( ~ full_name) +
+  theme_bw()
+```
+
+These top nine pitchers had careers ranging from eleven years (Clayton
+Kershaw and Sandy Koufax) to 23 years (Roger Clemens). All (unsurprisingly) have
+relatively low earned run averages. For reference, in modern baseball, an 
+earned run average between 2 and 3 is excellent, and an earned run average below
+2 is exceptional. The all-time leader is Ed Walsh, with a career earned run 
+average of 1.82.
+
+There does not appear to be a common trend. Koufax started with a fairly high
+earned run average and improved over the course of his career, and Walter 
+Johnson started with a low earned run average which got worse over the course of 
+his career. Roger Clemens is highly variable. Christy Mathewson and Cy Young
+have consistently low earned run averages. Of note is Bob Gibson's 1968 
+season, (arguably) the best performance by a pitcher in modern baseball with
+an earned run average of 1.12 in about 300 innings. 

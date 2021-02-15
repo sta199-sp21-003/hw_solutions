@@ -1,0 +1,141 @@
+---
+title: "Homework 01: Data visualization"
+output:
+  pdf_document: default
+  html_document: default
+editor_options: 
+  chunk_output_type: console
+---
+
+# Load packages and data
+
+```{r load-packages, message = FALSE, warning = FALSE}
+library(tidyverse)
+``` 
+
+```{r read-in-data}
+set.seed(1)
+diamonds_subset <- diamonds %>%
+  filter(carat <= 2.5) %>%
+  slice_sample(n = 1000)
+```
+
+# Exercise 1
+
+There are 1000 rows and 10 columns in this dataset. Note you can also just
+examine the documentation, so no code is necessary.
+
+```{r ex-1}
+dim(diamonds_subset)
+```
+
+# Exercise 2
+
+Clarity indicates how clear the diamond is, ranking from I1 (worst) to IF 
+(best). Color indicates the diamond's color, ranking from D (best) to J (worst).
+We should keep the meaning of these variables in mind as we answer these 
+questions.
+
+# Exercise 3
+
+```{r ex-3}
+ggplot(data = diamonds_subset, 
+       aes(x = carat, y = price)) + 
+  geom_point() +
+  labs(title = "Price vs carat for 1,000 diamonds",
+       y = "Price (USD)", x = "Carat")
+```
+
+Based on the scatterplot, it appears that larger diamonds are associated with
+higher prices, and as the size of the diamond increases there is more
+variability in price.
+
+# Exercise 4
+
+```{r ex-4}
+ggplot(data = diamonds_subset, 
+       aes(x = carat, y = price, color = color)) + 
+  geom_point() +
+  labs(title = "Price vs carat for 1,000 diamonds",
+       subtitle = "colored by diamond color",
+       y = "Price (USD)", x = "Carat")
+```
+
+For constant diamond weight, better colors are associated with higher prices.
+
+# Exercise 5
+
+```{r ex-5}
+ggplot(data = diamonds_subset, 
+       aes(x = carat, y = price, color = color)) + 
+  geom_point() +
+  geom_smooth(se = FALSE) +
+  labs(title = "Price vs carat for 1,000 diamonds",
+       y = "Price (USD)", x = "Carat")
+```
+
+# Exercise 6
+
+```{r ex-6}
+ggplot(data = diamonds_subset, 
+       aes(x = carat, y = price)) + 
+  geom_point() + 
+  facet_wrap( ~ clarity) +
+  labs(title = "Price vs carat for 1,000 diamonds",
+       subtitle = "faceted by clarity",
+       x = "Carat",
+       y = "Price (USD)")
+```
+
+# Exercise 7
+
+```{r ex-7}
+ggplot(data = diamonds_subset, 
+       aes(x = color)) + 
+  geom_bar() + 
+    labs(title = "Bar plots of diamond color",
+       x = "Color",
+       y = "Count")
+```
+
+# Exercise 8
+
+```{r ex-8}
+ggplot(data = diamonds_subset, 
+       aes(x = color, fill = cut)) + 
+  geom_bar(position = "fill") +  
+  labs(title = "Bar plots of diamond color",
+       subtitle = "filled by cut",
+       x = "Color",
+       y = "Proportion")
+```
+
+# Exercise 9
+
+This does not (and should not) work as price is a numeric variable.
+
+# Exercise 10
+
+```{r ex-10}
+ggplot(data = diamonds_subset, 
+       aes(x = color, y = price)) + 
+  geom_boxplot() +
+  labs(title = "Side-by-side boxplots of price by color",
+       x = "Color", 
+       y = "Price (USD)")
+
+ggplot(data = diamonds_subset, 
+       aes(x = color, y = price)) + 
+  geom_violin() + 
+  labs(title = "Side-by-side violinplots of price by color",
+       x = "Color", 
+       y = "Price (USD)")
+```
+
+The boxplots show the first and third quartile, median, and any outliers, while
+the violin plot shows a rotated density function for each price. Violin plots
+give a better sense of the distribution of price within each diamond color.
+
+# Exercise 11
+
+Answers will vary.
