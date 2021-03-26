@@ -5,7 +5,7 @@
 |-------------|-------------------------|
 | Homework 01 | :white_check_mark:      |
 | Homework 02 | :white_check_mark:      |
-| Homework 03 |                         |
+| Homework 03 | :white_check_mark:      |
 | Homework 04 |                         |
 | Homework 05 |                         |
 

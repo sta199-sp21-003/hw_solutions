@@ -1,0 +1,151 @@
+---
+title: "Homework 03: Probability"
+output:
+  pdf_document: default
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE, message = FALSE, 
+                      warning = FALSE, comment = "#>", highlight = TRUE)
+```
+
+## Packages
+
+```{r packages}
+library(tidyverse)
+```
+
+# Part I
+
+## Data
+
+```{r data}
+gamble <- read_table("http://users.stat.ufl.edu/~winner/data/riskgamble.dat",
+                      col_names = FALSE)
+```
+
+## Exercise 1 
+
+```{r ex_1}
+gamble <- gamble %>% 
+  rename(
+    decision_1 = X1,
+    decision_2 = X2,
+    count      = X3
+  ) %>% 
+  mutate(decision_1 = if_else(decision_1 == 1, "A", "B"),
+         decision_2 = if_else(decision_2 == 1, "C", "D"))
+gamble
+```
+
+## Exercise 2 
+   
+```{r ex_2}
+gamble %>% 
+  group_by(decision_1) %>% 
+  summarise(total_count = sum(count)) %>% 
+  mutate(probability = total_count / sum(total_count)) %>% 
+  filter(decision_1 == "A") %>% 
+  select(-total_count)
+```
+   
+## Exercise 3 
+
+```{r ex_3}
+gamble %>% 
+  mutate(probability = count / sum(count)) %>% 
+  filter(decision_1 == "A", decision_2 == "D") %>% 
+  select(-count)
+```
+
+## Exercise 4 
+   
+```{r ex_4}
+gamble %>% 
+  filter(decision_1 == "B") %>% 
+  mutate(probability = count / sum(count)) %>% 
+  filter(decision_1 == "B", decision_2 == "D") %>% 
+  select(probability)
+```
+
+Alternative solution:
+
+```{r ex_4_alt}
+gamble %>% 
+  group_by(decision_1) %>% 
+  mutate(probability = count / sum(count)) %>% 
+  ungroup() %>% 
+  filter(decision_1 == "B", decision_2 == "D") %>%
+  select(probability)
+```
+   
+## Exercise 5 
+
+This isn't possible, probability is 0. 
+   
+## Exercise 6 
+   
+```{r ex_6}
+gamble %>% 
+  filter(decision_2 == "D") %>% 
+  mutate(probability = count / sum(count)) %>% 
+  filter(decision_1 == "B", decision_2 == "D") %>% 
+  select(probability)
+```
+
+Alternative solution:
+
+```{r ex_6_alt}
+gamble %>% 
+  group_by(decision_2) %>% 
+  mutate(probability = count / sum(count)) %>% 
+  ungroup() %>% 
+  filter(decision_1 == "B", decision_2 == "D") %>% 
+  select(probability)
+```
+   
+## Exercise 7 
+   
+Answers will vary. No "correct" answer.
+   
+# Part II
+
+```{r set_seed}
+set.seed(2357822)
+```
+
+## Exercise 8 
+   
+```{r ex_8}
+tibble(
+  card_draw = sample(2:14, size = 10000, replace = TRUE),
+  die_roll  = sample(1:6, size = 10000, replace = TRUE)
+  ) %>% 
+  mutate(match = card_draw == die_roll) %>% 
+  summarise(probability = mean(match))
+```
+   
+## Exercise 9 
+   
+```{r ex_9}
+tibble(
+  card_draw = sample(1:13, size = 10000, replace = TRUE),
+  die_roll  = sample(1:6, size = 10000, replace = TRUE)
+  ) %>% 
+  mutate(event_occur = (card_draw > 10) | (die_roll == 6)) %>% 
+  summarise(probability = mean(event_occur))
+```
+
+## Exercise 10 
+    
+```{r ex_10}
+tibble(
+  draw_1 = sample(1:13, size = 10000, replace = TRUE),
+  draw_2 = sample(1:13, size = 10000, replace = TRUE),
+  draw_3 = sample(1:13, size = 10000, replace = TRUE)
+  ) %>% 
+  mutate(event_occur = (draw_3 > draw_2) & (draw_2 > draw_1)) %>% 
+  summarise(probability = mean(event_occur))
+```
