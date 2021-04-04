@@ -1,0 +1,161 @@
+---
+title: "Homework 04: Statistical inference"
+author: ""
+date: ""
+output:
+  pdf_document: default
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE, message = FALSE, 
+                      warning = FALSE, comment = "#>", highlight = TRUE)
+set.seed(37073)
+```
+
+# Packages
+
+```{r packages}
+library(tidyverse)
+library(infer)
+```
+
+# Data
+
+```{r load_data}
+gifted <- read_csv("https://www.openintro.org/data/csv/gifted.csv")
+```
+
+# Exercises
+
+## Exercise 1
+
+337,690 interviews conducted Jan. 2, 2016, through Dec. 30, 2017
+
+## Exericse 2
+
+These are sample proportions from the samples taken in the respective years.
+They are being reported as point estimates for the true unknown population
+parameters.
+
+## Exericse 3
+
+Confidence interval: (0.113, 0.117)
+
+We are 95% confident that the true proportion of adults nationwide with 
+diabetes is captured by the interval (0.113, 0.117).
+
+## Exericse 4
+
+Confidence interval: (0.049, 0.119)
+
+We are 95% confident that the true proportion of adults in Alaska with 
+diabetes is captured by the interval (0.049, 0.119).
+
+## Exericse 5
+
+$$H_0: p = 0.90$$
+$$H_A: p < 0.90$$
+
+Let $\alpha = 0.05$.
+
+```{r ex_5}
+claims <- tibble(settled_status = rep(c("on time", "not on time"), 
+                                      times = c(55, 20)))
+
+claims %>% 
+  prop_test(response = settled_status, p = 0.90, alternative = "less", z = TRUE,
+            success = "on time")
+```
+
+Since the p-value is less than $\alpha$, we reject the null hypothesis. Hence,
+we reject the company's claim that 90% of its claims are settled within
+30 days.
+
+## Exercise 6
+
+```{r ex_6}
+claims %>% 
+  specify(response = settled_status, success = "on time") %>% 
+  hypothesise(null = "point", p = 0.90) %>% 
+  generate(reps = 10000) %>% 
+  calculate(stat = "prop") %>% 
+  get_p_value(obs_stat = 55 / 75, direction = "less")
+```
+
+Both results are in agreement. Our conclusion does not change as the p-value
+is less than $\alpha$.
+
+## Exercise 7
+
+```{r ex_7}
+gifted %>% 
+  specify(response = count) %>% 
+  generate(reps = 10000) %>% 
+  calculate(stat = "mean") %>% 
+  get_ci(level = 0.98)
+```
+
+We are 98% confident that the mean number of months until gifted children from 
+the specified city can count to 10 is captured by the interval (29.1, 32.3).
+
+## Exercise 8 
+
+```{r ex_8}
+gifted %>% 
+  pivot_longer(cols      = edutv:cartoons, 
+               names_to  = "tv_type", 
+               values_to = "tv_hours") %>%
+  specify(tv_hours ~ tv_type) %>% 
+  generate(reps = 10000) %>%
+  calculate(stat = "diff in means", order = c("cartoons", "edutv")) %>% 
+  get_ci(level = 0.99)
+```
+
+Since our confidence interval does not cover 0, we can reject any claim that
+these children watch, on average, the same amount of cartoons and educational
+tv at the $\alpha = 0.01$ significance level. 
+
+## Exercise 9
+
+Ranking from largest to smallest:
+
+1. C
+2. B
+3. A
+
+B's interval is wider than A's because they use the same data, but B uses a 
+larger confidence level - `r qnorm(.975)` > `r qnorm(0.95)`. C's interval
+has to be wider than B's because C used a smaller sample size and had
+$\hat{p} = 0.50$. A smaller sample size increases the margin of error, all
+else held constant. Also, for a fixed sample size, when $\hat{p} = 0.5$ the
+standard error is maximized. Therefore, regardless of what value $\hat{p}$
+B had, C will have a wider interval.
+
+```{r}
+ggplot() +
+  xlim(0, 1) +
+  stat_function(fun = ~ sqrt(.x * (1 - .x) / 100), color = "blue") +
+  labs(y = "Standard error", x = "Sample proportion",
+       caption = "n is fixed to be 100") +
+  theme_minimal()
+```
+
+## Exercise 10 
+
+$$H_0: \mu = 2.00$$
+$$H_A: \mu > 2.00$$
+
+A Type I error occurs when the data leads us to reject $H_0$, but $H_0$ is
+actually true. This type of error would result in the company modifying its
+production pipeline and possibly produce catheters that are not 2mm in diameter.
+
+A Type II occurs when the data leads us to not reject $H_0$, but $H_0$ is
+actually false. This type of error would result in the company continuing
+to produce catheters as they currently do. It could result in catheters having
+incorrect diameters, which would cause complications for patients.
+
+# References
+
+Gallup, I. (2018). Diabetes Rates Rise in 18 States in Past Decade. 
+Gallup.com. Retrieved from 
+https://news.gallup.com/poll/243911/diabetes-rates-rise-states-past-decade.aspx
